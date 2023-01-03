@@ -3,6 +3,7 @@ package com.example.convidados.view
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.example.convidados.R
@@ -15,6 +16,7 @@ class GuestFormActivity : AppCompatActivity(), View.OnClickListener {
 
     private lateinit var binding: ActivityGuestFormBinding
     private lateinit var viewModel: GuestFormViewModel
+    private var guestId: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,8 +28,18 @@ class GuestFormActivity : AppCompatActivity(), View.OnClickListener {
         binding.buttonSave.setOnClickListener(this)
         binding.radioPresence.isChecked = true
 
-        observe()
         loadData()
+        observe()
+    }
+
+    override fun onClick(view: View) {
+        if(view.id == R.id.button_save) {
+            val name = binding.editName.text.toString()
+            val presence = binding.radioPresence.isChecked
+
+            val model = GuestModel(guestId, name, presence)
+            viewModel.save(model)
+        }
     }
 
     private fun observe() {
@@ -37,26 +49,28 @@ class GuestFormActivity : AppCompatActivity(), View.OnClickListener {
             if (it.presence) {
                 binding.radioPresence.isChecked = true
             } else {
-                binding.radioAbsent.isChecked = false
+                binding.radioAbsent.isChecked = true
             }
-
         })
-    }
 
-    override fun onClick(view: View) {
-        if(view.id == R.id.button_save) {
-            val name = binding.editName.text.toString()
-            val presence = binding.radioPresence.isChecked
+        viewModel.saveGuest.observe(this, Observer {
+            if (it) {
+                if (guestId == 0)
+                    Toast.makeText(applicationContext, "Inserção com sucesso", Toast.LENGTH_SHORT).show()
+                else
+                    Toast.makeText(applicationContext, "Atualização com sucesso", Toast.LENGTH_SHORT).show()
 
-            val model = GuestModel(0, name, presence)
-            viewModel.insert(model)
-        }
+                finish()
+            } else {
+              Toast.makeText(applicationContext, "Falha", Toast.LENGTH_SHORT).show()
+            }
+        })
     }
 
     private fun loadData() {
         val bundle = intent.extras
         if (bundle != null) {
-            val guestId = bundle.getInt(DatabaseConstants.GUEST.ID)
+            guestId = bundle.getInt(DatabaseConstants.GUEST.ID)
             viewModel.get(guestId)
         }
     }
