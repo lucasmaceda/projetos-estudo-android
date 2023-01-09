@@ -1,8 +1,11 @@
 package com.devmasterteam.tasks.service.repository.remote
 
 import android.icu.lang.UCharacter.GraphemeClusterBreak.T
+import com.devmasterteam.tasks.service.constants.TaskConstants
 import com.devmasterteam.tasks.service.repository.local.TaskDatabase
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okhttp3.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -11,9 +14,24 @@ class RetrofitClient private constructor(){
 
         private lateinit var INSTANCE: Retrofit
 
+        private var token: String = ""
+        private var personKey: String = ""
+
         private fun getRetrofitInstance(): Retrofit {
 
             val httpClient = OkHttpClient.Builder()
+
+            httpClient.addInterceptor(object : Interceptor {
+                override fun intercept(chain: Interceptor.Chain): Response {
+                    val request = chain.request()
+                        .newBuilder()
+                        .addHeader(TaskConstants.HEADER.TOKEN_KEY, token)
+                        .addHeader(TaskConstants.HEADER.PERSON_KEY, personKey)
+                        .build()
+
+                    return chain.proceed(request)
+                }
+            })
 
             if(!::INSTANCE.isInitialized)
             {
@@ -32,6 +50,11 @@ class RetrofitClient private constructor(){
 
         fun <T> getService(serviceClass: Class<T>): T {
             return getRetrofitInstance().create(serviceClass)
+        }
+
+        fun addHeaders(tokenValue: String, personKeyValue: String) {
+            token = tokenValue
+            personKey = personKeyValue
         }
     }
 }
