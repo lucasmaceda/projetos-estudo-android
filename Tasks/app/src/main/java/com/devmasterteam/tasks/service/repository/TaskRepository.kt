@@ -5,26 +5,27 @@ import com.devmasterteam.tasks.R
 import com.devmasterteam.tasks.service.constants.TaskConstants
 import com.devmasterteam.tasks.service.listener.APIListener
 import com.devmasterteam.tasks.service.model.PersonModel
-import com.devmasterteam.tasks.service.model.PriorityModel
-import com.devmasterteam.tasks.service.repository.local.TaskDatabase
-import com.devmasterteam.tasks.service.repository.remote.PriorityService
+import com.devmasterteam.tasks.service.model.TaskModel
 import com.devmasterteam.tasks.service.repository.remote.RetrofitClient
+import com.devmasterteam.tasks.service.repository.remote.TaskService
 import com.google.gson.Gson
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class PriorityRepository (val context: Context){
+class TaskRepository(val context: Context) {
 
-    private val remote = RetrofitClient.getService(PriorityService::class.java)
-    private val database = TaskDatabase.getDatabase(context).priorityDAO()
+    private val remote = RetrofitClient.getService(TaskService::class.java)
 
-    fun list(listener: APIListener<List<PriorityModel>>) {
-        val call = remote.list()
+    fun create(task: TaskModel, listener: APIListener<Boolean>)
+    {
+        val call = remote.create(task.priorityId,
+                                 task.description,
+                                 task.dueDate,
+                                 task.complete)
 
-        call.enqueue(object : Callback<List<PriorityModel>> {
-            override fun onResponse(call: Call<List<PriorityModel>>,
-                                    response: Response<List<PriorityModel>>)
+        call.enqueue(object : Callback<Boolean> {
+            override fun onResponse(call: Call<Boolean>, response: Response<Boolean>)
             {
                 if(response.code() == TaskConstants.HTTP.SUCCESS)
                 {
@@ -36,25 +37,16 @@ class PriorityRepository (val context: Context){
                 }
             }
 
-            override fun onFailure(call: Call<List<PriorityModel>>, t: Throwable)
+            override fun onFailure(call: Call<Boolean>, t: Throwable)
             {
                 listener.onFailure(context.getString(R.string.ERROR_UNEXPECTED))
             }
 
         })
-    }
 
-    fun list(): List<PriorityModel> {
-        return database.list()
-    }
-
-    fun save(list: List<PriorityModel>) {
-        database.clear()
-        database.save(list)
     }
 
     private fun failResponse(string: String): String {
         return Gson().fromJson(string, String::class.java)
     }
-
 }
