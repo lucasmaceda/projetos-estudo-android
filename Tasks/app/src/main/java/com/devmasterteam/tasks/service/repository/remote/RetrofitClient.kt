@@ -9,16 +9,14 @@ import okhttp3.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-class RetrofitClient private constructor(){
+class RetrofitClient private constructor() {
+
     companion object {
-
         private lateinit var INSTANCE: Retrofit
-
         private var token: String = ""
         private var personKey: String = ""
 
         private fun getRetrofitInstance(): Retrofit {
-
             val httpClient = OkHttpClient.Builder()
 
             httpClient.addInterceptor(object : Interceptor {
@@ -28,15 +26,12 @@ class RetrofitClient private constructor(){
                         .addHeader(TaskConstants.HEADER.TOKEN_KEY, token)
                         .addHeader(TaskConstants.HEADER.PERSON_KEY, personKey)
                         .build()
-
                     return chain.proceed(request)
                 }
             })
 
-            if(!::INSTANCE.isInitialized)
-            {
-                synchronized(RetrofitClient::class)
-                {
+            if (!::INSTANCE.isInitialized) {
+                synchronized(RetrofitClient::class) {
                     INSTANCE = Retrofit.Builder()
                         .baseUrl("http://devmasterteam.com/CursoAndroidAPI/")
                         .client(httpClient.build())
@@ -44,7 +39,6 @@ class RetrofitClient private constructor(){
                         .build()
                 }
             }
-
             return INSTANCE
         }
 

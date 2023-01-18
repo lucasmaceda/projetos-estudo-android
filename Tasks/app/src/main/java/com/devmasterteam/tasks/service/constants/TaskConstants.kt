@@ -27,10 +27,10 @@ class TaskConstants private constructor() {
         const val TASKFILTER = "taskfilter"
     }
 
+    // Filtro de tarefas
     object FILTER {
         const val ALL = 0
         const val NEXT = 1
         const val EXPIRED = 2
     }
-
 }

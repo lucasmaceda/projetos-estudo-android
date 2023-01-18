@@ -14,27 +14,42 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class PriorityRepository (val context: Context): BaseRepository() {
+class PriorityRepository(context: Context) : BaseRepository(context) {
 
     private val remote = RetrofitClient.getService(PriorityService::class.java)
     private val database = TaskDatabase.getDatabase(context).priorityDAO()
 
+    companion object {
+        private val cache = mutableMapOf<Int, String>()
+        fun getDescription(id: Int): String {
+            return cache[id] ?: ""
+        }
+        fun setDescription(id: Int, str: String) {
+            cache[id] = str
+        }
+    }
+
+    /**
+     * Obtém a descrição da tarefa, sempre buscando no cache antes do banco de dados
+     * */
+    fun getDescription(id: Int): String {
+        val cached = PriorityRepository.getDescription(id)
+        return if (cached == "") {
+            val description = database.getDescription(id)
+            PriorityRepository.setDescription(id, description)
+            description
+        } else {
+            cached
+        }
+    }
+
     fun list(listener: APIListener<List<PriorityModel>>) {
-        val call = remote.list()
+        if (!isConnectionAvailable()) {
+            listener.onFailure(context.getString(R.string.ERROR_INTERNET_CONNECTION))
+            return
+        }
 
-        call.enqueue(object : Callback<List<PriorityModel>> {
-            override fun onResponse(call: Call<List<PriorityModel>>,
-                                    response: Response<List<PriorityModel>>)
-            {
-                handleResponse(response, listener)
-            }
-
-            override fun onFailure(call: Call<List<PriorityModel>>, t: Throwable)
-            {
-                listener.onFailure(context.getString(R.string.ERROR_UNEXPECTED))
-            }
-
-        })
+        executeCall(remote.list(), listener)
     }
 
     fun list(): List<PriorityModel> {

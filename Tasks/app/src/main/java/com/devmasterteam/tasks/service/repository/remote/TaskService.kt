@@ -9,10 +9,10 @@ interface TaskService {
     @GET("Task")
     fun list(): Call<List<TaskModel>>
 
-    @GET("Next7Days")
+    @GET("Task/Next7Days")
     fun listNext(): Call<List<TaskModel>>
 
-    @GET("Overdue")
+    @GET("Task/Overdue")
     fun listOverdue(): Call<List<TaskModel>>
 
     @GET("Task/{id}")
@@ -30,7 +30,7 @@ interface TaskService {
     @PUT("Task")
     @FormUrlEncoded
     fun update(
-        @Field("Id") id: Int  ,
+        @Field("Id") id: Int,
         @Field("PriorityId") priorityId: Int,
         @Field("Description") description: String,
         @Field("DueDate") dueDate: String,
@@ -45,8 +45,7 @@ interface TaskService {
     @FormUrlEncoded
     fun undo(@Field("Id") id: Int): Call<Boolean>
 
-    // voltar pra corrigir
-    @DELETE("Task")
+    @HTTP(method = "DELETE", path = "Task", hasBody = true)
     @FormUrlEncoded
     fun delete(@Field("Id") id: Int): Call<Boolean>
 }
